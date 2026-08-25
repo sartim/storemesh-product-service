@@ -6,10 +6,10 @@ import (
 	"net"
 	"os"
 
-	"storemesh-product-service/internal/auth"
-	productv1 "storemesh-product-service/gen/storemesh/product/v1"
-	"storemesh-product-service/internal/repository"
-	"storemesh-product-service/internal/service"
+	productv1 "github.com/sartim/storemesh-product-service/gen/storemesh/product/v1"
+	"github.com/sartim/storemesh-product-service/internal/auth"
+	"github.com/sartim/storemesh-product-service/internal/repository"
+	"github.com/sartim/storemesh-product-service/internal/service"
 	"google.golang.org/grpc"
 )
 
@@ -21,14 +21,20 @@ func main() {
 	serverOptions := []grpc.ServerOption{}
 	if secret := os.Getenv("JWT_SECRET"); secret != "" {
 		issuer, audience := os.Getenv("JWT_ISSUER"), os.Getenv("JWT_AUDIENCE")
-		if issuer == "" { issuer = "storemesh-product-service" }
-		if audience == "" { audience = "storemesh-platform" }
+		if issuer == "" {
+			issuer = "storemesh-product-service"
+		}
+		if audience == "" {
+			audience = "storemesh-platform"
+		}
 		serverOptions = append(serverOptions, grpc.UnaryInterceptor(auth.UnaryInterceptor(secret, issuer, audience)))
 	}
 	server := grpc.NewServer(serverOptions...)
 	if databaseURL := os.Getenv("DATABASE_URL"); databaseURL != "" {
 		store, err := repository.OpenProductStore(context.Background(), databaseURL)
-		if err != nil { log.Fatal(err) }
+		if err != nil {
+			log.Fatal(err)
+		}
 		defer store.Close()
 		productv1.RegisterProductCatalogServiceServer(server, service.NewPersistentCatalog(store))
 	} else {

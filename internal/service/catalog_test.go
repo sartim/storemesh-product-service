@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	productv1 "storemesh-product-service/gen/storemesh/product/v1"
+	productv1 "github.com/sartim/storemesh-product-service/gen/storemesh/product/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
