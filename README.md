@@ -7,9 +7,10 @@ orders, payments, or user identity.
 ## Contract status
 
 The initial protobuf contract is in `proto/storemesh/product/v1/product.proto`.
-The first runtime slice now provides an in-memory gRPC catalog for contract and
-behavior validation. PostgreSQL persistence, authentication, and production
-deployment are subsequent steps.
+The runtime uses the in-memory catalog when `DATABASE_URL` is unset and the
+PostgreSQL repository when it is configured. Apply `migrations/001_products.sql`
+before starting the persistent mode. Authentication and production deployment
+remain subsequent steps.
 
 ## Local validation
 
