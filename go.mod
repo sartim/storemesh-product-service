@@ -1,4 +1,4 @@
-module storemesh-product-service
+module github.com/sartim/storemesh-product-service
 
 go 1.26.6
 
