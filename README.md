@@ -6,9 +6,10 @@ orders, payments, or user identity.
 
 ## Contract status
 
-The initial protobuf contract is in `proto/product/v1/product.proto`. Generated
-transport code and persistence are deliberately the next implementation steps;
-this repository establishes the boundary before runtime code is added.
+The initial protobuf contract is in `proto/storemesh/product/v1/product.proto`.
+The first runtime slice now provides an in-memory gRPC catalog for contract and
+behavior validation. PostgreSQL persistence, authentication, and production
+deployment are subsequent steps.
 
 ## Local validation
 
