@@ -10,7 +10,9 @@ The initial protobuf contract is in `proto/storemesh/product/v1/product.proto`.
 The runtime uses the in-memory catalog when `DATABASE_URL` is unset and the
 PostgreSQL repository when it is configured. Apply `migrations/001_products.sql`
 before starting the persistent mode. Authentication and production deployment
-remain subsequent steps.
+are enabled with `JWT_SECRET`, `JWT_ISSUER`, and `JWT_AUDIENCE`; when
+`JWT_SECRET` is unset, the binary is intentionally unauthenticated for local
+contract development only.
 
 ## Local validation
 
