@@ -25,3 +25,6 @@ jobs:
 
       - name: Build protobuf image
         run: buf build proto
+
+      - name: Generate transport artifacts
+        run: cd proto && buf generate --template buf.gen.yaml .

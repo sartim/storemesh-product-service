@@ -16,8 +16,13 @@ Install [Buf](https://buf.build) and run:
 
 ```sh
 buf lint proto
-buf breaking --against '.git#branch=main' proto
+buf build proto
+cd proto && buf generate --template buf.gen.yaml .
 ```
+
+Generation writes Go/protobuf transport code to `gen/` and the OpenAPI
+document to `openapi/`. These are build artifacts for the upcoming runtime
+implementation and should be regenerated whenever the contract changes.
 
 The service will follow the StoreMesh conventions: gRPC internally, annotated
 HTTP handlers externally, PostgreSQL persistence, OpenTelemetry, Prometheus,
