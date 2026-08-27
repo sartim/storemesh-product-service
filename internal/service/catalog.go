@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"sort"
 	"strings"
 	"sync"
 
@@ -61,16 +62,36 @@ func (c *Catalog) GetProduct(_ context.Context, req *productv1.GetProductRequest
 }
 
 func (c *Catalog) ListProducts(_ context.Context, req *productv1.ListProductsRequest) (*productv1.ListProductsResponse, error) {
+	pageSize, offset, err := pageParameters(req)
+	if err != nil {
+		return nil, err
+	}
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	response := &productv1.ListProductsResponse{}
+	products := make([]*productv1.Product, 0, len(c.products))
 	for _, product := range c.products {
 		if req.GetStatus() != productv1.ProductStatus_PRODUCT_STATUS_UNSPECIFIED && product.GetStatus() != req.GetStatus() {
 			continue
 		}
-		response.Products = append(response.Products, clone(product))
+		products = append(products, clone(product))
 	}
-	return response, nil
+	sort.Slice(products, func(i, j int) bool {
+		if products[i].GetCreatedAt().AsTime().Equal(products[j].GetCreatedAt().AsTime()) {
+			return products[i].GetId() < products[j].GetId()
+		}
+		return products[i].GetCreatedAt().AsTime().Before(products[j].GetCreatedAt().AsTime())
+	})
+	if offset > len(products) {
+		return nil, status.Error(codes.InvalidArgument, "page_token is invalid")
+	}
+	end := offset + pageSize
+	if end > len(products) {
+		end = len(products)
+	}
+	return &productv1.ListProductsResponse{
+		Products:      products[offset:end],
+		NextPageToken: nextPageToken(offset, pageSize, len(products)),
+	}, nil
 }
 
 func (c *Catalog) UpdateProduct(_ context.Context, req *productv1.UpdateProductRequest) (*productv1.UpdateProductResponse, error) {

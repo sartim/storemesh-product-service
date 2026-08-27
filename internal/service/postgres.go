@@ -51,11 +51,19 @@ func (c *PersistentCatalog) GetProduct(ctx context.Context, req *productv1.GetPr
 }
 
 func (c *PersistentCatalog) ListProducts(ctx context.Context, req *productv1.ListProductsRequest) (*productv1.ListProductsResponse, error) {
-	products, err := c.store.List(ctx, req.GetStatus())
+	pageSize, offset, err := pageParameters(req)
+	if err != nil {
+		return nil, err
+	}
+	products, hasMore, err := c.store.List(ctx, req.GetStatus(), pageSize, offset)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "list products")
 	}
-	return &productv1.ListProductsResponse{Products: products}, nil
+	response := &productv1.ListProductsResponse{Products: products}
+	if hasMore {
+		response.NextPageToken = nextPageToken(offset, pageSize, offset+len(products)+1)
+	}
+	return response, nil
 }
 
 func (c *PersistentCatalog) UpdateProduct(ctx context.Context, req *productv1.UpdateProductRequest) (*productv1.UpdateProductResponse, error) {

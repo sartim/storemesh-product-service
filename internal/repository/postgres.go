@@ -35,21 +35,28 @@ func (s *ProductStore) Find(ctx context.Context, id string) (*productv1.Product,
 	return s.scan(s.db.QueryRowContext(ctx, `SELECT id, sku, name, description, price_minor, currency, status, created_at, updated_at FROM products WHERE id=$1`, id))
 }
 
-func (s *ProductStore) List(ctx context.Context, status productv1.ProductStatus) ([]*productv1.Product, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT id, sku, name, description, price_minor, currency, status, created_at, updated_at FROM products WHERE ($1 = 0 OR status = $1) ORDER BY created_at, id`, status)
+func (s *ProductStore) List(ctx context.Context, status productv1.ProductStatus, limit, offset int) ([]*productv1.Product, bool, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT id, sku, name, description, price_minor, currency, status, created_at, updated_at FROM products WHERE ($1 = 0 OR status = $1) ORDER BY created_at, id LIMIT $2 OFFSET $3`, status, limit+1, offset)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	defer rows.Close()
 	var products []*productv1.Product
-	for rows.Next() {
+	for len(products) <= limit && rows.Next() {
 		p, scanErr := s.scan(rows)
 		if scanErr != nil {
-			return nil, scanErr
+			return nil, false, scanErr
 		}
 		products = append(products, p)
 	}
-	return products, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, false, err
+	}
+	hasMore := len(products) > limit
+	if hasMore {
+		products = products[:limit]
+	}
+	return products, hasMore, nil
 }
 
 func (s *ProductStore) Update(ctx context.Context, p *productv1.Product) error {
