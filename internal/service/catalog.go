@@ -11,6 +11,7 @@ import (
 	productv1 "github.com/sartim/storemesh-product-service/gen/storemesh/product/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -137,6 +138,5 @@ func clone(product *productv1.Product) *productv1.Product {
 	if product == nil {
 		return nil
 	}
-	copy := *product
-	return &copy
+	return proto.Clone(product).(*productv1.Product)
 }
