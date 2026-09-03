@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"log"
 	"strings"
 
 	"github.com/google/uuid"
@@ -31,6 +32,7 @@ func (c *PersistentCatalog) CreateProduct(ctx context.Context, req *productv1.Cr
 	p.Id, p.Status = uuid.NewString(), productv1.ProductStatus_PRODUCT_STATUS_ACTIVE
 	p.CreatedAt, p.UpdatedAt = timestamppb.Now(), timestamppb.Now()
 	if err := c.store.Insert(ctx, p); err != nil {
+		log.Printf("product create failed sku=%q: %v", p.Sku, err)
 		if strings.Contains(err.Error(), "duplicate key") {
 			return nil, status.Errorf(codes.AlreadyExists, "product SKU %q already exists", p.Sku)
 		}
