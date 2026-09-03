@@ -31,3 +31,22 @@ implementation and should be regenerated whenever the contract changes.
 The service will follow the StoreMesh conventions: gRPC internally, annotated
 HTTP handlers externally, PostgreSQL persistence, OpenTelemetry, Prometheus,
 structured logging, and Helm/Argo CD delivery.
+
+## Run locally without Docker or Kubernetes
+
+Requires Go 1.26.6 or newer. The default in-memory catalog needs no external
+services:
+
+```sh
+go run ./cmd/server
+```
+
+Use alternate addresses when running multiple services directly on localhost:
+
+```sh
+GRPC_ADDR=:50051 METRICS_ADDR=:8081 go run ./cmd/server
+```
+
+Set `DATABASE_URL` and apply `migrations/001_products.sql` to exercise the
+PostgreSQL repository. Set `JWT_SECRET` only when testing authenticated gRPC;
+an unset secret intentionally keeps local contract development unauthenticated.
