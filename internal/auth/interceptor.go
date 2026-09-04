@@ -11,24 +11,39 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func UnaryInterceptor(secret, issuer, audience string) grpc.UnaryServerInterceptor {
+func UnaryInterceptor(secret, issuer, audience string, oidc *OIDCValidator) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		token, err := bearerToken(ctx)
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
+		if oidc != nil && strings.HasPrefix(token, "eyJ") {
+			if err := oidc.Validate(token); err == nil {
+				return handler(ctx, req)
+			}
+		}
 		claims := jwt.MapClaims{}
 		parsed, err := jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (any, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok { return nil, status.Error(codes.Unauthenticated, "unexpected signing method") }
+			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, status.Error(codes.Unauthenticated, "unexpected signing method")
+			}
 			return []byte(secret), nil
 		}, jwt.WithIssuer(issuer), jwt.WithAudience(audience))
-		if err != nil || !parsed.Valid { return nil, status.Error(codes.Unauthenticated, "invalid bearer token") }
+		if err != nil || !parsed.Valid {
+			return nil, status.Error(codes.Unauthenticated, "invalid bearer token")
+		}
 		return handler(ctx, req)
 	}
 }
 
 func bearerToken(ctx context.Context) (string, error) {
 	values := metadata.ValueFromIncomingContext(ctx, "authorization")
-	if len(values) == 0 { return "", status.Error(codes.Unauthenticated, "authorization is required") }
+	if len(values) == 0 {
+		return "", status.Error(codes.Unauthenticated, "authorization is required")
+	}
 	parts := strings.Fields(values[0])
-	if len(parts) != 2 || !strings.EqualFold(parts[0], "bearer") { return "", status.Error(codes.Unauthenticated, "bearer authorization is required") }
+	if len(parts) != 2 || !strings.EqualFold(parts[0], "bearer") {
+		return "", status.Error(codes.Unauthenticated, "bearer authorization is required")
+	}
 	return parts[1], nil
 }

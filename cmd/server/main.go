@@ -31,7 +31,11 @@ func main() {
 		if audience == "" {
 			audience = "storemesh-platform"
 		}
-		serverOptions = append(serverOptions, grpc.UnaryInterceptor(auth.UnaryInterceptor(secret, issuer, audience)))
+		oidc, err := auth.NewOIDCValidator(os.Getenv("KEYCLOAK_ISSUER"), os.Getenv("KEYCLOAK_AUDIENCE"))
+		if err != nil {
+			log.Fatalf("configure Keycloak OIDC: %v", err)
+		}
+		serverOptions = append(serverOptions, grpc.UnaryInterceptor(auth.UnaryInterceptor(secret, issuer, audience, oidc)))
 	}
 	server := grpc.NewServer(serverOptions...)
 	go serveMetrics(env("METRICS_ADDR", ":8080"))
