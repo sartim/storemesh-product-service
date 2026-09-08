@@ -58,3 +58,16 @@ func TestCatalogListProductsRejectsInvalidPageToken(t *testing.T) {
 		t.Fatalf("expected invalid argument, got %v", err)
 	}
 }
+
+func TestNewDemoCatalogSeedsStorefrontFixture(t *testing.T) {
+	response, err := NewDemoCatalog().ListProducts(context.Background(), &productv1.ListProductsRequest{PageSize: 100, Status: productv1.ProductStatus_PRODUCT_STATUS_ACTIVE})
+	if err != nil {
+		t.Fatalf("list demo products: %v", err)
+	}
+	if got, want := len(response.GetProducts()), 32; got != want {
+		t.Fatalf("demo product count = %d, want %d", got, want)
+	}
+	if response.GetProducts()[0].GetSku() != "SM-LAMP-001" {
+		t.Fatalf("first demo SKU = %q", response.GetProducts()[0].GetSku())
+	}
+}

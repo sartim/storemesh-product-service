@@ -72,4 +72,3 @@ message UpdateProductRequest {
 message UpdateProductResponse { Product product = 1; }
 message ArchiveProductRequest { string id = 1; }
 message ArchiveProductResponse { google.protobuf.Empty result = 1; }
-

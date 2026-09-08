@@ -47,7 +47,7 @@ func main() {
 		defer store.Close()
 		productv1.RegisterProductCatalogServiceServer(server, service.NewPersistentCatalog(store))
 	} else {
-		productv1.RegisterProductCatalogServiceServer(server, service.NewCatalog())
+		productv1.RegisterProductCatalogServiceServer(server, service.NewDemoCatalog())
 	}
 	log.Println("product service listening on " + grpcAddr)
 	if err := server.Serve(listener); err != nil {

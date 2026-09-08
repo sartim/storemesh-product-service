@@ -38,6 +38,12 @@ The service will follow the StoreMesh conventions: gRPC internally, annotated
 HTTP handlers externally, PostgreSQL persistence, OpenTelemetry, Prometheus,
 structured logging, and Helm/Argo CD delivery.
 
+When `DATABASE_URL` is unset, local development starts with 32 active demo
+products so the storefront is immediately useful. The fixture is defined in
+`internal/service/demo_catalog.go`; it is deliberately not enabled for
+PostgreSQL mode or production deployments. The frontend assigns deterministic
+image URLs to these SKUs for lightweight local visual testing.
+
 ## Run locally without Docker or Kubernetes
 
 Requires Go 1.26.6 or newer. The default in-memory catalog needs no external
