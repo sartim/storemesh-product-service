@@ -41,7 +41,7 @@ structured logging, and Helm/Argo CD delivery.
 ## Run locally without Docker or Kubernetes
 
 Requires Go 1.26.6 or newer. The default in-memory catalog needs no external
-services:
+services. Run the process from this repository:
 
 ```sh
 go run ./cmd/server
