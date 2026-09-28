@@ -12,13 +12,14 @@ PostgreSQL repository when it is configured. Apply `migrations/001_products.sql`
 before starting the persistent mode. Authentication and production deployment
 are enabled with `JWT_SECRET`, `JWT_ISSUER`, and `JWT_AUDIENCE`; when
 `JWT_SECRET` is unset, the binary is intentionally unauthenticated for local
-contract development only.
+contract development only unless Keycloak OIDC is configured.
 
 Keycloak access tokens can also be accepted during migration by setting
 `KEYCLOAK_ISSUER` and `KEYCLOAK_AUDIENCE`. The service discovers the issuer's
-JWKS endpoint and validates RS256 tokens. Legacy HS256 service tokens remain
-supported while downstream services migrate; do not expose unauthenticated
-mode outside isolated local development.
+JWKS endpoint and validates RS256 tokens. When OIDC is configured it is the
+authoritative authentication mode; legacy HS256 service tokens are accepted
+only when OIDC is not configured. Do not expose unauthenticated mode outside
+isolated local development.
 
 ## Local validation
 

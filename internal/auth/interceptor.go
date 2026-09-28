@@ -17,10 +17,14 @@ func UnaryInterceptor(secret, issuer, audience string, oidc *OIDCValidator) grpc
 		if err != nil {
 			return nil, err
 		}
-		if oidc != nil && strings.HasPrefix(token, "eyJ") {
-			if err := oidc.Validate(token); err == nil {
-				return handler(ctx, req)
+		if oidc != nil {
+			if err := oidc.Validate(token); err != nil {
+				return nil, status.Error(codes.Unauthenticated, "invalid OIDC bearer token")
 			}
+			return handler(ctx, req)
+		}
+		if secret == "" {
+			return nil, status.Error(codes.Unauthenticated, "authentication is not configured")
 		}
 		claims := jwt.MapClaims{}
 		parsed, err := jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (any, error) {

@@ -23,17 +23,18 @@ func main() {
 		log.Fatal(err)
 	}
 	serverOptions := []grpc.ServerOption{}
-	if secret := os.Getenv("JWT_SECRET"); secret != "" {
+	secret := os.Getenv("JWT_SECRET")
+	oidc, err := auth.NewOIDCValidator(os.Getenv("KEYCLOAK_ISSUER"), os.Getenv("KEYCLOAK_AUDIENCE"))
+	if err != nil {
+		log.Fatalf("configure Keycloak OIDC: %v", err)
+	}
+	if oidc != nil || secret != "" {
 		issuer, audience := os.Getenv("JWT_ISSUER"), os.Getenv("JWT_AUDIENCE")
 		if issuer == "" {
 			issuer = "storemesh-product-service"
 		}
 		if audience == "" {
 			audience = "storemesh-platform"
-		}
-		oidc, err := auth.NewOIDCValidator(os.Getenv("KEYCLOAK_ISSUER"), os.Getenv("KEYCLOAK_AUDIENCE"))
-		if err != nil {
-			log.Fatalf("configure Keycloak OIDC: %v", err)
 		}
 		serverOptions = append(serverOptions, grpc.UnaryInterceptor(auth.UnaryInterceptor(secret, issuer, audience, oidc)))
 	}
