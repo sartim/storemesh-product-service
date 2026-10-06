@@ -23,3 +23,22 @@ func TestUnaryInterceptorRequiresBearerToken(t *testing.T) {
 		t.Fatalf("expected unauthenticated, got %v", err)
 	}
 }
+
+func TestProductMutationRequiresAdminRole(t *testing.T) {
+	if !isProductMutation("/storemesh.product.v1.ProductCatalogService/CreateProduct") ||
+		!isProductMutation("/storemesh.product.v1.ProductCatalogService/UpdateProduct") ||
+		!isProductMutation("/storemesh.product.v1.ProductCatalogService/ArchiveProduct") {
+		t.Fatal("catalog mutation method was not identified")
+	}
+	if isProductMutation("/storemesh.product.v1.ProductCatalogService/ListProducts") {
+		t.Fatal("catalog read method must not be treated as a mutation")
+	}
+	if hasAdminRole(&OIDCClaims{}) {
+		t.Fatal("customer without roles must not be an admin")
+	}
+	admin := &OIDCClaims{}
+	admin.RealmAccess.Roles = []string{"customer", "admin"}
+	if !hasAdminRole(admin) {
+		t.Fatal("realm admin role should authorize catalog mutations")
+	}
+}

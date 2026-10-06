@@ -30,6 +30,13 @@ type oidcJWKS struct {
 	Keys []struct{ Kid, Kty, N, E string } `json:"keys"`
 }
 
+type OIDCClaims struct {
+	jwt.RegisteredClaims
+	RealmAccess struct {
+		Roles []string `json:"roles"`
+	} `json:"realm_access"`
+}
+
 func NewOIDCValidator(issuer, audience string) (*OIDCValidator, error) {
 	issuer = strings.TrimRight(strings.TrimSpace(issuer), "/")
 	if issuer == "" || audience == "" {
@@ -95,7 +102,13 @@ func (v *OIDCValidator) loadKeys() error {
 }
 
 func (v *OIDCValidator) Validate(raw string) error {
-	token, err := jwt.ParseWithClaims(raw, &jwt.RegisteredClaims{}, func(token *jwt.Token) (any, error) {
+	_, err := v.ValidateClaims(raw)
+	return err
+}
+
+func (v *OIDCValidator) ValidateClaims(raw string) (*OIDCClaims, error) {
+	claims := &OIDCClaims{}
+	token, err := jwt.ParseWithClaims(raw, claims, func(token *jwt.Token) (any, error) {
 		if token.Method != jwt.SigningMethodRS256 {
 			return nil, fmt.Errorf("unexpected signing method")
 		}
@@ -117,9 +130,9 @@ func (v *OIDCValidator) Validate(raw string) error {
 		return key, nil
 	}, jwt.WithIssuer(v.issuer), jwt.WithAudience(v.audience), jwt.WithLeeway(30*time.Second))
 	if err != nil || !token.Valid {
-		return fmt.Errorf("invalid OIDC token: %w", err)
+		return nil, fmt.Errorf("invalid OIDC token: %w", err)
 	}
-	return nil
+	return claims, nil
 }
 
 func getJSON(url string, target any) error {

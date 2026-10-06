@@ -18,8 +18,12 @@ func UnaryInterceptor(secret, issuer, audience string, oidc *OIDCValidator) grpc
 			return nil, err
 		}
 		if oidc != nil {
-			if err := oidc.Validate(token); err != nil {
+			claims, err := oidc.ValidateClaims(token)
+			if err != nil {
 				return nil, status.Error(codes.Unauthenticated, "invalid OIDC bearer token")
+			}
+			if isProductMutation(info.FullMethod) && !hasAdminRole(claims) {
+				return nil, status.Error(codes.PermissionDenied, "admin role is required")
 			}
 			return handler(ctx, req)
 		}
@@ -38,6 +42,29 @@ func UnaryInterceptor(secret, issuer, audience string, oidc *OIDCValidator) grpc
 		}
 		return handler(ctx, req)
 	}
+}
+
+func isProductMutation(method string) bool {
+	switch method {
+	case "/storemesh.product.v1.ProductCatalogService/CreateProduct",
+		"/storemesh.product.v1.ProductCatalogService/UpdateProduct",
+		"/storemesh.product.v1.ProductCatalogService/ArchiveProduct":
+		return true
+	default:
+		return false
+	}
+}
+
+func hasAdminRole(claims *OIDCClaims) bool {
+	if claims == nil {
+		return false
+	}
+	for _, role := range claims.RealmAccess.Roles {
+		if strings.EqualFold(strings.TrimSpace(role), "admin") {
+			return true
+		}
+	}
+	return false
 }
 
 func bearerToken(ctx context.Context) (string, error) {

@@ -21,6 +21,12 @@ authoritative authentication mode; legacy HS256 service tokens are accepted
 only when OIDC is not configured. Do not expose unauthenticated mode outside
 isolated local development.
 
+For Keycloak OIDC requests, `CreateProduct`, `UpdateProduct`, and
+`ArchiveProduct` additionally require the Keycloak realm `admin` role.
+Catalog reads remain available to authenticated users. The legacy HS256 path
+is transitional and does not provide this role-based write authorization; do
+not expose it as a human-facing authorization mechanism.
+
 ## Local validation
 
 Install [Buf](https://buf.build) and run:
